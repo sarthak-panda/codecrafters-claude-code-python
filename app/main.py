@@ -62,7 +62,7 @@ def main():
     print("Logs from your program will appear here!", file=sys.stderr)
 
     # TODO: Uncomment the following line to pass the first stage
-    if ((not chat.choices[0].message.tool_calls) or (len(not chat.choices[0].message.tool_calls) == 0)):
+    if ((not chat.choices[0].message.tool_calls) or (len(chat.choices[0].message.tool_calls) == 0)):
         print(chat.choices[0].message.content)
     else:
         first_tool_func=chat.choices[0].message.tool_calls[0].function
