@@ -74,9 +74,11 @@ def main():
     
         # TODO: Uncomment the following line to pass the first stage
         if ((not chat.choices[0].message.tool_calls) or (len(chat.choices[0].message.tool_calls) == 0)):
+            print("hi")
             print(chat.choices[0].message.content)
             break
         else:
+            print("hi1")
             tool_id=chat.choices[0].message.tool_calls[0].id
             first_tool_func=chat.choices[0].message.tool_calls[0].function
             func_name=first_tool_func.name
