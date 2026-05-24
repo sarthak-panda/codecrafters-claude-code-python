@@ -1,34 +1,81 @@
-[![progress-banner](https://backend.codecrafters.io/progress/claude-code/2ef9e236-17e5-4b49-98ae-e120bd3d9d3b)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Custom Claude Code Implementation
 
-This is a starting point for Python solutions to the
-["Build Your own Claude Code" Challenge](https://codecrafters.io/challenges/claude-code).
+This project is a custom Claude Code-style coding assistant written in Python. It was developed as part of the CodeCrafters "Build Your Own Claude Code" challenge. The assistant mimics an agentic coding workflow by sending prompts to an LLM, handling tool calls, and feeding tool results back into the conversation loop.
 
-Claude Code is an AI coding assistant that uses Large Language Models (LLMs) to
-understand code and perform actions through tool calls. In this challenge,
-you'll build your own Claude Code from scratch by implementing an LLM-powered
-coding assistant.
+## Features
 
-Along the way you'll learn about HTTP RESTful APIs, OpenAI-compatible tool
-calling, agent loop, and how to integrate multiple tools into an AI assistant.
+- **Tool Calling Loop:** Supports iterative assistant-tool-assistant messaging until the model returns a final response.
+- **File Reading:** Implements a `Read` tool for reading file contents from disk.
+- **File Writing:** Implements a `Write` tool for creating or overwriting files.
+- **Shell Command Execution:** Implements a `Bash` tool for running shell commands and capturing their output.
+- **OpenRouter Integration:** Uses an OpenAI-compatible client configured for OpenRouter via `OPENROUTER_API_KEY` and `OPENROUTER_BASE_URL`.
+- **JSON Argument Parsing:** Parses tool arguments from JSON before dispatching to the correct handler.
+- **Extensible Tool Dispatch:** Keeps the tool execution logic centralized in a single dispatcher so more tools can be added easily.
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+## Key Design Aspects & Implementation Details
 
-# Passing the first stage
+### 1. Agent Loop Orchestration
+The main program follows the standard tool-calling agent pattern:
+- Send the current conversation history to the model.
+- Inspect the response for tool calls.
+- Execute each tool locally.
+- Convert tool outputs into the format expected by the chat API.
+- Append those tool responses back into the message list and continue until the model stops requesting tools.
 
-The entry point for your `claude-code` implementation is in `app/main.py`. Study
-and uncomment the relevant code, and submit to pass the first stage:
+This makes the assistant behave like a lightweight coding agent rather than a one-shot chatbot.
 
-```sh
+### 2. Tool Dispatch Model
+The `exec_func` function acts as the central dispatcher for tool execution.
+- `Read` opens a file and returns its full contents.
+- `Write` opens a file in write mode, which creates the file if it does not exist and overwrites it if it does.
+- `Bash` executes a shell command using Python's subprocess capabilities and returns stdout/stderr output.
+
+Keeping tool execution in one place makes the control flow easy to follow and simple to extend.
+
+### 3. JSON Argument Handling
+Tool arguments arrive as JSON strings from the model, so the implementation first normalizes them with `parse_json_args`.
+- Empty arguments are treated as an empty object.
+- JSON is parsed into a dictionary before execution.
+- The dispatcher can then safely access the expected fields for each tool.
+
+This keeps the tool layer close to the API contract used by OpenAI-compatible chat completions.
+
+### 4. OpenRouter-Based Model Access
+The assistant connects to OpenRouter using the OpenAI Python client.
+- The API key is read from `OPENROUTER_API_KEY`.
+- The base URL defaults to the OpenRouter API endpoint.
+- The model is called through the chat completions interface with tool definitions included.
+
+This makes the project portable across compatible models and easy to swap to another provider if needed.
+
+## Prerequisites
+
+- **Python:** Python 3.14 or newer.
+- **Package Manager:** `uv` for local execution.
+- **API Access:** A valid `OPENROUTER_API_KEY`.
+- **OS:** Linux or macOS.
+
+## Run Instructions
+
+To run the assistant locally, use the provided wrapper script:
+
+```bash
+./your_program.sh -p "your prompt here"
+```
+
+You can also run the main module directly through `uv` if needed:
+
+```bash
+uv run --project . -m app.main -p "your prompt here"
+```
+
+To submit your solution to CodeCrafters:
+
+```bash
 codecrafters submit
 ```
 
-# Stage 2 & beyond
+# Thanks for Visting the Repo
 
-Note: This section is for stages 2 and beyond.
+<img src="https://raw.githubusercontent.com/sarthak-panda/codecrafters-shell-cpp/main/assets/6206076367057652854.jpg"/>
 
-1. Ensure you have `uv` installed locally.
-2. Run `./your_program.sh` to run your program, which is implemented in
-   `app/main.py`.
-3. Run `codecrafters submit` to submit your solution to CodeCrafters. Test
-   output will be streamed to your terminal.
