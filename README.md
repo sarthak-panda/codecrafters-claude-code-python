@@ -55,6 +55,28 @@ This makes the project portable across compatible models and easy to swap to ano
 - **API Access:** A valid `OPENROUTER_API_KEY`.
 - **OS:** Linux or macOS.
 
+## Local Setup
+
+### 1. Install `uv`
+
+If `uv` is not installed already, install it with:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+After installation, restart your terminal or make sure `~/.local/bin` is on your `PATH`.
+
+### 2. Set the API Key
+
+Export your OpenRouter API key before running the app:
+
+```bash
+export OPENROUTER_API_KEY="your_key_here"
+```
+
+You can also set `OPENROUTER_BASE_URL` if you want to use a different OpenRouter endpoint.
+
 ## Run Instructions
 
 To run the assistant locally, use the provided wrapper script:
@@ -74,6 +96,21 @@ To submit your solution to CodeCrafters:
 ```bash
 codecrafters submit
 ```
+
+## Token Limit Note
+
+If you hit credit or context limits on OpenRouter, adjust the `max_tokens` value in `app/main.py` around the chat completion call.
+
+```python
+chat = client.chat.completions.create(
+	model="anthropic/claude-haiku-4.5",
+	messages=msg,
+	max_tokens=1024, # you can change max tokens as per your requirement
+	tools=[...],
+)
+```
+
+Lower values like `512` or `1024` are usually safer for free-tier usage.
 
 # Thanks for Visting the Repo
 

@@ -64,7 +64,7 @@ def main():
         chat = client.chat.completions.create(
             model="anthropic/claude-haiku-4.5",
             messages=msg,
-            max_tokens=1024,
+            max_tokens=1024,# you can change max tokens as per your requirement , ig upto 8000 tokens it is free with openrouter api
             tools=[{
                 "type": "function",
                 "function": {
