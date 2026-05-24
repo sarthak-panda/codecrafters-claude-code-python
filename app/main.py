@@ -23,6 +23,13 @@ def exec_func(f_name,f_args):
             contents = f.read()
         return contents
 
+def standardize(content,tool_id):
+    return {
+        "role": "tool",
+        "tool_call_id": tool_id,
+        "content": content,
+    }
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("-p", required=True)
@@ -33,45 +40,50 @@ def main():
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-    chat = client.chat.completions.create(
-        model="anthropic/claude-haiku-4.5",
-        messages=[{"role": "user", "content": args.p}],
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "Read",
-                "description": "Read and return the contents of a file",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                    "file_path": {
-                        "type": "string",
-                        "description": "The path to the file to read"
-                        }
-                    },
-                "required": ["file_path"]
-                }
-            }        
-        },],
-    )
+    msg = [{"role": "user", "content": args.p}]
 
-    if not chat.choices or len(chat.choices) == 0:
-        raise RuntimeError("no choices in response")
+    while True:
 
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!", file=sys.stderr)
+        chat = client.chat.completions.create(
+            model="anthropic/claude-haiku-4.5",
+            messages=msg,
+            tools=[{
+                "type": "function",
+                "function": {
+                    "name": "Read",
+                    "description": "Read and return the contents of a file",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                        "file_path": {
+                            "type": "string",
+                            "description": "The path to the file to read"
+                            }
+                        },
+                    "required": ["file_path"]
+                    }
+                }        
+            },],
+        )
 
-    # TODO: Uncomment the following line to pass the first stage
-    if ((not chat.choices[0].message.tool_calls) or (len(chat.choices[0].message.tool_calls) == 0)):
-        print(chat.choices[0].message.content)
-    else:
-        first_tool_func=chat.choices[0].message.tool_calls[0].function
-        func_name=first_tool_func.name
-        func_args=first_tool_func.arguments
-        res=exec_func(func_name,func_args)
-        print(res)
+        if not chat.choices or len(chat.choices) == 0:
+            raise RuntimeError("no choices in response")
 
-
+        # You can use print statements as follows for debugging, they'll be visible when running tests.
+        print("Logs from your program will appear here!", file=sys.stderr)
+    
+        # TODO: Uncomment the following line to pass the first stage
+        if ((not chat.choices[0].message.tool_calls) or (len(chat.choices[0].message.tool_calls) == 0)):
+            print(chat.choices[0].message.content)
+            break
+        else:
+            tool_id=chat.choices[0].message.tool_calls[0].id
+            first_tool_func=chat.choices[0].message.tool_calls[0].function
+            func_name=first_tool_func.name
+            func_args=first_tool_func.arguments
+            res=exec_func(func_name,func_args)
+            openai_api_format_tool_response=standardize(res,tool_id)
+            msg.append(openai_api_format_tool_response)
 
 if __name__ == "__main__":
     main()
