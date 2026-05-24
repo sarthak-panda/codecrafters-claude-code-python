@@ -68,24 +68,26 @@ def main():
 
         if not chat.choices or len(chat.choices) == 0:
             raise RuntimeError("no choices in response")
+            
+        msg.append(chat)
 
         # You can use print statements as follows for debugging, they'll be visible when running tests.
         print("Logs from your program will appear here!", file=sys.stderr)
     
         # TODO: Uncomment the following line to pass the first stage
         if ((not chat.choices[0].message.tool_calls) or (len(chat.choices[0].message.tool_calls) == 0)):
-            print("hi")
             print(chat.choices[0].message.content)
             break
         else:
-            print("hi1")
-            tool_id=chat.choices[0].message.tool_calls[0].id
-            first_tool_func=chat.choices[0].message.tool_calls[0].function
-            func_name=first_tool_func.name
-            func_args=first_tool_func.arguments
-            res=exec_func(func_name,func_args)
-            openai_api_format_tool_response=standardize(res,tool_id)
-            msg.append(openai_api_format_tool_response)
+            tool_arr=chat.choices[0].message.tool_calls
+            for i in range(len(tool_arr)):
+                tool_id=tool_arr[i].id
+                first_tool_func=tool_arr[i].function
+                func_name=first_tool_func.name
+                func_args=first_tool_func.arguments
+                res=exec_func(func_name,func_args)
+                openai_api_format_tool_response=standardize(res,tool_id)
+                msg.append(openai_api_format_tool_response)
 
 if __name__ == "__main__":
     main()
