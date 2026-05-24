@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import json
+import subprocess
 
 from openai import OpenAI
 
@@ -28,7 +29,16 @@ def exec_func(f_name,f_args):
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(content)
         return "File Written Successfully"
-        
+    elif f_name=="Bash":
+        command=args_map["command"]
+        try:
+            result = subprocess.run(command,shell=True,capture_output=True,text=True)
+            output = "".join([result.stdout, result.stderr]).strip()
+            if result.returncode != 0:
+                return f"Command failed with exit code {result.returncode}: {output}"
+            return output
+        except Exception as e:
+            return f"Command execution failed: {e}"
 
 def standardize(content,tool_id):
     return {
@@ -87,6 +97,23 @@ def main():
                             "content": {
                                 "type": "string",
                                 "description": "The content to write to the file"
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "Bash",
+                    "description": "Execute a shell command",
+                    "parameters": {
+                        "type": "object",
+                        "required": ["command"],
+                        "properties": {
+                            "command": {
+                                "type": "string",
+                                "description": "The command to execute"
                             }
                         }
                     }
